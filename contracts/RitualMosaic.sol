@@ -4,7 +4,7 @@ pragma solidity ^0.8.20;
 contract RitualMosaic {
     address public owner;
     uint256 public slotPrice = 0.001 ether;
-    uint256 public constant TOTAL_SLOTS = 133;
+    uint256 public constant TOTAL_SLOTS = 334;
 
     struct Slot {
         address claimer;
