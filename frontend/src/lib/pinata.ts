@@ -1,27 +1,25 @@
-export async function uploadToPinata(file: File): Promise<string> {
-  const formData = new FormData();
-  formData.append("file", file);
-  formData.append("pinataMetadata", JSON.stringify({ name: `ritual-mosaic-pfp-${Date.now()}` }));
-  formData.append("pinataOptions", JSON.stringify({ cidVersion: 1 }));
+// All uploads go through our own API route — keeps keys server-side
+// and avoids CORS issues with calling Pinata directly from browser
 
-  const res = await fetch("https://api.pinata.cloud/pinning/pinFileToIPFS", {
+export async function uploadToIPFS(file: File | Blob, filename?: string): Promise<string> {
+  const formData = new FormData();
+  formData.append("file", file, filename || "upload");
+
+  const res = await fetch("/api/upload", {
     method: "POST",
-    headers: {
-      pinata_api_key: process.env.NEXT_PUBLIC_PINATA_API_KEY || "",
-      pinata_secret_api_key: process.env.NEXT_PUBLIC_PINATA_SECRET_KEY || "",
-    },
     body: formData,
   });
 
   if (!res.ok) {
-    const err = await res.text();
-    throw new Error(`Pinata upload failed: ${err}`);
+    const err = await res.json().catch(() => ({ error: "Upload failed" }));
+    throw new Error(err.error || "Upload failed");
   }
 
   const data = await res.json();
-  return data.IpfsHash as string;
+  return data.ipfsHash as string;
 }
 
 export function ipfsUrl(hash: string): string {
+  if (!hash) return "";
   return `https://gateway.pinata.cloud/ipfs/${hash}`;
 }
